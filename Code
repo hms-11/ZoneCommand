@@ -1,0 +1,537 @@
+//  ------------------------- ZONE COMMAND ---------------------
+//  ---------------------6 ZONE CONTROL BOARD-------------------
+
+//  -------------------DESIGNED AND PROGRAMMED BY:--------------
+// ----------------------------COREY EARL-----------------------
+// -------------------REVISION 1 (SEPT 20TH, 2020)--------------
+// --------------All Zones Appear to Function And Debug---------
+// ------------------------More Testing Needed------------------
+
+
+// print debug messages or not to serial
+const bool serialDisplay = true;
+
+
+///  ---------------SETTINGS-----------------
+
+// Which zones are active. If a zone is active set as true, if a zone is deactived or not needed set to false.
+const bool zone1Active = true;
+const bool zone2Active = true;
+const bool zone3Active = true;
+const bool zone4Active = true;
+const bool zone5Active = true;
+const bool zone6Active = true;
+
+// If the relay goes active when driven low set this to true, if the relays go active when drive high set to false
+const bool relayLow = true;
+
+// Sensor trigger points to trigger each zones output on. High or low "on" decided by relayLow setting
+
+// Zone 1 setpoints
+int trigger1On = 100;
+int trigger1Off = 400;
+
+// Zone 2 setpoints
+int trigger2On = 100;
+int trigger2Off = 400;
+
+// Zone 3 setpoints
+int trigger3On = 100;
+int trigger3Off = 400;
+
+// Zone 4 setpoints
+int trigger4On = 100;
+int trigger4Off = 400;
+
+// Zone 5 setpoints
+int trigger5On = 100;
+int trigger5Off = 400;
+
+// Zone 6 setpoints
+int trigger6On = 100;
+int trigger6Off = 400;
+
+//// -------------------CODE----------------------
+
+// ---Pin Assignments--
+
+// Set Pin Assignments for Zone Status LED's
+const int zone1 = 8;
+const int zone2 = 9;
+const int zone3 = 10;
+const int zone4 = 11;
+const int zone5 = 12;
+const int zone6 = 13;
+
+
+// Set pin assignments for OUT pins
+const int out1 = 2;
+const int out2 = 3;
+const int out3 = 4;
+const int out4 = 5;
+const int out5 = 6;
+const int out6 = 7;
+
+// Set pin asignments for sensor inputs and read delays (done with millis, not delay)
+const byte sens1 = A0;
+const byte sens2 = A1;
+const byte sens3 = A2;
+const byte sens4 = A3;
+const byte sens5 = A4;
+const byte sens6 = A5;
+
+// --Variables--
+
+// Delay Variables
+unsigned long sensorReadDelay = 500; // delay between sensor readings in millis
+unsigned long lastSensorReadTime = 0; //the last time a sensor was read
+unsigned long serialDelay = 3000; // delay between printing to serial monitor in millis
+unsigned long lastSerialPrintTime = 0; // the last time the serial monitor was printed too
+
+
+// Analog sensor reading values sensors 1-6
+int sensor1;
+int sensor2;
+int sensor3;
+int sensor4;
+int sensor5;
+int sensor6;
+
+// Sensor pins 1-6 states ("1" = Low, "2" = Neutral, "3" = High)
+int reading1;
+int reading2;
+int reading3;
+int reading4;
+int reading5;
+int reading6;
+
+// Output pin values outputs 1-6
+int outRead1;
+int outRead2;
+int outRead3;
+int outRead4;
+int outRead5;
+int outRead6;
+
+// Output LED pin values outputs 1-6
+int outReadLED1;
+int outReadLED2;
+int outReadLED3;
+int outReadLED4;
+int outReadLED5;
+int outReadLED6;
+
+
+
+void setup() {
+
+  // start the serial monitor and display welcome message
+  Serial.begin(9600);
+  Serial.println( "           Processes Started   ");
+  Serial.println("           --ZONE COMMAND VERSION 1--    ");
+  Serial.println("            --6 ZONE CONTROL BOARD--     ");
+  Serial.println("                       --                ");
+
+  // set LED indicator pins to output.
+  pinMode(zone1, OUTPUT);
+  pinMode(zone2, OUTPUT);
+  pinMode(zone3, OUTPUT);
+  pinMode(zone4, OUTPUT);
+  pinMode(zone5, OUTPUT);
+  pinMode(zone6, OUTPUT);
+  // set OUT pins to output
+  pinMode(out1, OUTPUT);
+  pinMode(out2, OUTPUT);
+  pinMode(out3, OUTPUT);
+  pinMode(out4, OUTPUT);
+  pinMode(out5, OUTPUT);
+  pinMode(out6, OUTPUT);
+  // set sensor pins to input
+  pinMode(sens1, INPUT);
+  pinMode(sens2, INPUT);
+  pinMode(sens3, INPUT);
+  pinMode(sens4, INPUT);
+  pinMode(sens5, INPUT);
+  pinMode(sens6, INPUT);
+}
+
+// Read Zone 1 sensor and control output if zone is active
+void zone1Control() {
+  if (zone1Active)  {  //if the zone is active
+    sensor1 = analogRead(sens1);
+    if ((unsigned long)(millis() - lastSensorReadTime) >= sensorReadDelay) {
+      lastSensorReadTime = millis();
+
+      // Set the sensor reading levels for the output trigger for sensor1
+      if (sensor1 <= trigger1On) {
+        reading1 = 1; // Reading is below trigger, turn on relay
+      }
+      else if (sensor1 >= trigger1On && sensor1 <= trigger1Off) {
+        reading1 = 2; // Reading is in between triggers, maintain relay state
+      }
+      else if (sensor1 >= trigger1Off) {
+        reading1 = 3; // Reading is above trigger, turn off relay
+      }
+    }
+
+    if (relayLow) { //if the relays are activated by being driven low
+      if (reading1 == 1) { // if the output needs to be turned on
+        digitalWrite(out1, LOW);
+        digitalWrite(zone1, HIGH); //Turn Zone Indicator LED On
+      }
+      else if (reading1 == 3) { //if the output needs to be turned off
+        digitalWrite(out1, HIGH);
+        digitalWrite(zone1, LOW); //Turn Zone Indicator LED Off
+      }
+    }
+    else if (!relayLow) { //if the relays are actived by being driven high
+      if (reading1 == 1) { // if the output needs to be turned on
+        digitalWrite(out1, HIGH);
+        digitalWrite(zone1, HIGH); //Turn Zone Indicator LED On
+      }
+      else if (reading1 == 3) { //if the output needs to be turned off
+        digitalWrite(out1, LOW);
+        digitalWrite(zone1, LOW); //Turn Zone Indicator LED Off
+      }
+    }
+  }
+}
+
+// Read Zone 2 sensor and control output if zone is active
+void zone2Control() {
+  if (zone2Active)  {  //if the zone is active
+    sensor2 = analogRead(sens2);
+    if ((unsigned long)(millis() - lastSensorReadTime) >= sensorReadDelay) {
+      lastSensorReadTime = millis();
+
+      // Set the sensor reading levels for the output trigger for sensor1
+      if (sensor2 <= trigger2On) {
+        reading2 = 1; // Reading is below trigger, turn on relay
+      }
+      else if (sensor2 >= trigger2On && sensor2 <= trigger2Off) {
+        reading2 = 2; // Reading is in between triggers, maintain relay state
+      }
+      else if (sensor2 >= trigger2Off) {
+        reading2 = 3; // Reading is above trigger, turn off relay
+      }
+    }
+
+    if (relayLow) { //if the relays are activated by being driven low
+      if (reading2 == 1) { // if the output needs to be turned on
+        digitalWrite(out2, LOW);
+        digitalWrite(zone2, HIGH); //Turn Zone Indicator LED On
+      }
+      else if (reading2 == 3) { //if the output needs to be turned off
+        digitalWrite(out2, HIGH);
+        digitalWrite(zone2, LOW); //Turn Zone Indicator LED Off
+      }
+    }
+    else if (!relayLow) { //if the relays are actived by being driven high
+      if (reading2 == 1) { // if the output needs to be turned on
+        digitalWrite(out2, HIGH);
+        digitalWrite(zone2, HIGH);//Turn Zone Indicator LED On
+      }
+      else if (reading2 == 3) { //if the output needs to be turned off
+        digitalWrite(out2, LOW);
+        digitalWrite(zone2, LOW); //Turn Zone Indicator LED Off
+      }
+    }
+  }
+}
+
+// Read Zone 3 sensor and control output if zone is active
+void zone3Control() {
+  if (zone3Active)  {  //if the zone is active
+    sensor3 = analogRead(sens3);
+    if ((unsigned long)(millis() - lastSensorReadTime) >= sensorReadDelay) {
+      lastSensorReadTime = millis();
+
+      // Set the sensor reading levels for the output trigger for sensor1
+      if (sensor3 <= trigger3On) {
+        reading3 = 1; // Reading is below trigger, turn on relay
+      }
+      else if (sensor3 >= trigger3On && sensor3 <= trigger3Off) {
+        reading3 = 2; // Reading is in between triggers, maintain relay state
+      }
+      else if (sensor3 >= trigger3Off) {
+        reading3 = 3; // Reading is above trigger, turn off relay
+      }
+    }
+
+    if (relayLow) { //if the relays are activated by being driven low
+      if (reading3 == 1) { // if the output needs to be turned on
+        digitalWrite(out3, LOW);
+        digitalWrite(zone3, HIGH); //Turn Zone Indicator LED On
+      }
+      else if (reading3 == 3) { //if the output needs to be turned off
+        digitalWrite(out3, HIGH);
+        digitalWrite(zone3, LOW); //Turn Zone Indicator LED Off
+      }
+    }
+    else if (!relayLow) { //if the relays are actived by being driven high
+      if (reading3 == 1) { // if the output needs to be turned on
+        digitalWrite(out3, HIGH);
+        digitalWrite(zone3, HIGH);//Turn Zone Indicator LED On
+      }
+      else if (reading3 == 3) { //if the output needs to be turned off
+        digitalWrite(out3, LOW);
+        digitalWrite(zone3, LOW); //Turn Zone Indicator LED Off
+      }
+    }
+  }
+}
+
+// Read Zone 4 sensor and control output if zone is active
+void zone4Control() {
+  if (zone4Active)  {  //if the zone is active
+    sensor4 = analogRead(sens4);
+    if ((unsigned long)(millis() - lastSensorReadTime) >= sensorReadDelay) {
+      lastSensorReadTime = millis();
+
+      // Set the sensor reading levels for the output trigger for sensor1
+      if (sensor4 <= trigger4On) {
+        reading4 = 1; // Reading is below trigger, turn on relay
+      }
+      else if (sensor4 >= trigger4On && sensor4 <= trigger4Off) {
+        reading4 = 2; // Reading is in between triggers, maintain relay state
+      }
+      else if (sensor4 >= trigger4Off) {
+        reading4 = 3; // Reading is above trigger, turn off relay
+      }
+    }
+
+    if (relayLow) { //if the relays are activated by being driven low
+      if (reading4 == 1) { // if the output needs to be turned on
+        digitalWrite(out4, LOW);
+        digitalWrite(zone4, HIGH); //Turn Zone Indicator LED On
+      }
+      else if (reading4 == 3) { //if the output needs to be turned off
+        digitalWrite(out4, HIGH);
+        digitalWrite(zone4, LOW); //Turn Zone Indicator LED Off
+      }
+    }
+    else if (!relayLow) { //if the relays are actived by being driven high
+      if (reading4 == 1) { // if the output needs to be turned on
+        digitalWrite(out4, HIGH);
+        digitalWrite(zone4, HIGH);//Turn Zone Indicator LED On
+      }
+      else if (reading4 == 3) { //if the output needs to be turned off
+        digitalWrite(out4, LOW);
+        digitalWrite(zone4, LOW); //Turn Zone Indicator LED Off
+      }
+    }
+  }
+}
+
+// Read Zone 5 sensor and control output if zone is active
+void zone5Control() {
+  if (zone5Active)  {  //if the zone is active
+    sensor5 = analogRead(sens5);
+    if ((unsigned long)(millis() - lastSensorReadTime) >= sensorReadDelay) {
+      lastSensorReadTime = millis();
+
+      // Set the sensor reading levels for the output trigger for sensor1
+      if (sensor5 <= trigger5On) {
+        reading5 = 1; // Reading is below trigger, turn on relay
+      }
+      else if (sensor5 >= trigger5On && sensor5 <= trigger5Off) {
+        reading5 = 2; // Reading is in between triggers, maintain relay state
+      }
+      else if (sensor5 >= trigger5Off) {
+        reading5 = 3; // Reading is above trigger, turn off relay
+      }
+    }
+
+    if (relayLow) { //if the relays are activated by being driven low
+      if (reading5 == 1) { // if the output needs to be turned on
+        digitalWrite(out5, LOW);
+        digitalWrite(zone5, HIGH); //Turn Zone Indicator LED On
+      }
+      else if (reading5 == 3) { //if the output needs to be turned off
+        digitalWrite(out5, HIGH);
+        digitalWrite(zone5, LOW); //Turn Zone Indicator LED Off
+      }
+    }
+    else if (!relayLow) { //if the relays are actived by being driven high
+      if (reading5 == 1) { // if the output needs to be turned on
+        digitalWrite(out5, HIGH);
+        digitalWrite(zone5, HIGH);//Turn Zone Indicator LED On
+      }
+      else if (reading5 == 3) { //if the output needs to be turned off
+        digitalWrite(out5, LOW);
+        digitalWrite(zone5, LOW); //Turn Zone Indicator LED Off
+      }
+    }
+  }
+}
+
+// Read Zone 6 sensor and control output if zone is active
+void zone6Control() {
+  if (zone6Active)  {  //if the zone is active
+    sensor6 = analogRead(sens6);
+    if ((unsigned long)(millis() - lastSensorReadTime) >= sensorReadDelay) {
+      lastSensorReadTime = millis();
+
+      // Set the sensor reading levels for the output trigger for sensor1
+      if (sensor6 <= trigger6On) {
+        reading6 = 1; // Reading is below trigger, turn on relay
+      }
+      else if (sensor6 >= trigger6On && sensor6 <= trigger6Off) {
+        reading6 = 2; // Reading is in between triggers, maintain relay state
+      }
+      else if (sensor6 >= trigger6Off) {
+        reading6 = 3; // Reading is above trigger, turn off relay
+      }
+    }
+
+    if (relayLow) { //if the relays are activated by being driven low
+      if (reading6 == 1) { // if the output needs to be turned on
+        digitalWrite(out6, LOW);
+        digitalWrite(zone6, HIGH); //Turn Zone Indicator LED On
+      }
+      else if (reading6 == 3) { //if the output needs to be turned off
+        digitalWrite(out6, HIGH);
+        digitalWrite(zone6, LOW); //Turn Zone Indicator LED Off
+      }
+    }
+    else if (!relayLow) { //if the relays are actived by being driven high
+      if (reading6 == 1) { // if the output needs to be turned on
+        digitalWrite(out6, HIGH);
+        digitalWrite(zone6, HIGH);//Turn Zone Indicator LED On
+      }
+      else if (reading6 == 3) { //if the output needs to be turned off
+        digitalWrite(out6, LOW);
+        digitalWrite(zone6, LOW); //Turn Zone Indicator LED Off
+      }
+    }
+  }
+}
+
+// Display Serial debugging messages to serial monitor if serialDisplay set to true
+void serialDebug() {
+  if (serialDisplay) { // if debug mode is turned on
+    if ((unsigned long)(millis() - lastSerialPrintTime) >= serialDelay) {
+      lastSerialPrintTime = millis();
+      if (relayLow) { // if the Relays are activated by a low signal
+        Serial.println(" Relays are set to be activated by a LOW (0V) signal ");
+      }
+      else if (!relayLow) { // if the Relays are activated by a high signal
+       Serial.println(" Relays are set to be activated by a HIGH (5V) signal ");
+      }
+      Serial.println(" ZONE STATUS ");
+      Serial.println("    --    ");
+      // ZONE 1 DETAILS
+      if (zone1Active) { // if the zone is active
+        outRead1 = digitalRead(out1); //check state of output 1
+        outReadLED1 = digitalRead(zone1); //check state of zone 1 indicator LED
+        Serial.println(" out1 output value (1 is HIGH or 5V and 0 is low or 0V):   ");
+        Serial.print(outRead1);
+        Serial.println("");
+        Serial.println(" Zone 1 LED:   ");
+        Serial.print(outReadLED1);
+        Serial.println("");
+        Serial.println(" Sensor1 Value:   ");
+        Serial.print(sensor1);
+        Serial.println("");
+        Serial.println(" Reading1 Value ('1' = LOW, '2' = NEUTRAL, '3' = HIGH:   ");
+        Serial.print(reading1);
+        Serial.println("");
+      }
+      // ZONE 2 DETAILS
+      if (zone2Active) { // if the zone is active
+        outRead2 = digitalRead(out2); //check state of output 2
+        outReadLED2 = digitalRead(zone2); //check state of zone 2 indicator LED
+        Serial.println(" out2 output value (1 is HIGH or 5V and 0 is low or 0V):   ");
+        Serial.print(outRead2);
+        Serial.println("");
+        Serial.println(" Zone 2 LED:   ");
+        Serial.print(outReadLED2);
+        Serial.println("");
+        Serial.println(" Sensor2 Value:   ");
+        Serial.print(sensor2);
+        Serial.println("");
+        Serial.println(" Reading2 Value ('1' = LOW, '2' = NEUTRAL, '3' = HIGH:   ");
+        Serial.print(reading2);
+        Serial.println("");
+      }
+      // ZONE 3 DETAILS
+      if (zone3Active) { // if the zone is active
+        outRead3 = digitalRead(out3); //check state of output 3
+        outReadLED3 = digitalRead(zone3); //check state of zone 3 indicator LED
+        Serial.println(" out3 output value (1 is HIGH or 5V and 0 is low or 0V):   ");
+        Serial.print(outRead3);
+        Serial.println("");
+        Serial.println(" Zone 3 LED:   ");
+        Serial.print(outReadLED3);
+        Serial.println("");
+        Serial.println(" Sensor3 Value:   ");
+        Serial.print(sensor3);
+        Serial.println("");
+        Serial.println(" Reading3 Value ('1' = LOW, '2' = NEUTRAL, '3' = HIGH:   ");
+        Serial.print(reading3);
+        Serial.println("");
+      }
+      // ZONE 4 DETAILS
+      if (zone4Active) { // if the zone is active
+        outRead4 = digitalRead(out4); //check state of output 4
+        outReadLED4 = digitalRead(zone4); //check state of zone 4 indicator LED
+        Serial.println(" out4 output value (1 is HIGH or 5V and 0 is low or 0V):   ");
+        Serial.print(outRead4);
+        Serial.println("");
+        Serial.println(" Zone 4 LED:   ");
+        Serial.print(outReadLED4);
+        Serial.println("");
+        Serial.println(" Sensor4 Value:   ");
+        Serial.print(sensor4);
+        Serial.println("");
+        Serial.println(" Reading4 Value ('1' = LOW, '2' = NEUTRAL, '3' = HIGH:   ");
+        Serial.print(reading4);
+        Serial.println("");
+      }
+            // ZONE 5 DETAILS
+      if (zone5Active) { // if the zone is active
+        outRead5 = digitalRead(out5); //check state of output 5
+        outReadLED5 = digitalRead(zone3); //check state of zone 5 indicator LED
+        Serial.println(" out5 output value (1 is HIGH or 5V and 0 is low or 0V):   ");
+        Serial.print(outRead5);
+        Serial.println("");
+        Serial.println(" Zone 5 LED:   ");
+        Serial.print(outReadLED5);
+        Serial.println("");
+        Serial.println(" Sensor5 Value:   ");
+        Serial.print(sensor5);
+        Serial.println("");
+        Serial.println(" Reading5 Value ('1' = LOW, '2' = NEUTRAL, '3' = HIGH:   ");
+        Serial.print(reading5);
+        Serial.println("");
+      }
+      // ZONE 6 DETAILS
+      if (zone6Active) { // if the zone is active
+        outRead6 = digitalRead(out6); //check state of output 6
+        outReadLED6 = digitalRead(zone6); //check state of zone 4 indicator LED
+        Serial.println(" out6 output value (1 is HIGH or 5V and 0 is low or 0V):   ");
+        Serial.print(outRead6);
+        Serial.println("");
+        Serial.println(" Zone 6 LED:   ");
+        Serial.print(outReadLED6);
+        Serial.println("");
+        Serial.println(" Sensor6 Value:   ");
+        Serial.print(sensor6);
+        Serial.println("");
+        Serial.println(" Reading6 Value ('1' = LOW, '2' = NEUTRAL, '3' = HIGH:   ");
+        Serial.print(reading6);
+        Serial.println("");
+      }
+    }
+  }
+}
+void loop() {
+  // put your main code here, to run repeatedly:
+  zone1Control();
+  zone2Control();
+  zone3Control();
+  zone4Control();
+  zone5Control();
+  zone6Control();
+  serialDebug();
+}
